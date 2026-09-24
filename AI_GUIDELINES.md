@@ -31,3 +31,17 @@
 4. **`DECISIONS.md`:** If an AI suggestion changes our approach or influences a technical decision, the final decision and the reason go in `DECISIONS.md`, written by a human.
 
 5. **PR description:** Every PR states in one sentence whether AI was involved, and links to the related log entry. The description itself is written by a human (see Section 1).
+
+---
+
+# Section 3 - How we will handle disagreements about AI output quality
+
+1. **Who decides**: If two teammates disagree about whether AI-generated output (code, tests, docs, or a plan) is good enough to adopt, the code steward has final say, not whoever wrote the prompt and not whoever has more experience. If the code steward is the one who generated the output, another teammate they name in DECISIONS.md makes the call instead.
+
+2. **Evidence required before a merge decision**: The code passes the existing test suite and the PR review checklist, and someone other than its author can explain what it does and why (same rule as Section 1, #4). For AI-generated plans, the evidence is that the plan traces back to the spec, or to the chosen idea recorded in DECISIONS.md when there is no spec.
+
+3. **Sources and claims**: If the disagreement is about whether an AI-cited paper, API, or fact is real or correct, the person who wants to use it must verify it against the original source. Unverified AI claims don't go into the repo or the report.
+
+4. **Style vs. correctness**: If the disagreement is about style or preference rather than correctness, we defer to our style guide and linter config instead of debating case by case.
+
+5. **Tie-breaking**: A vote is not evidence, and "it looks fine" is not evidence. If the criteria above don't settle it, the code steward's call is final and gets one sentence in DECISIONS.md explaining why, written by a human.
