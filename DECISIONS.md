@@ -15,3 +15,39 @@ familiarity with the author as a variable.
 not the question we want to answer; what we want to learn is
 how a handoff with our tool differs from a handoff with only
 a README.
+
+## 2026-11-23 — Plan to get the main task running
+ 
+**What:** The first end-to-end version is the thinnest path from input to `HANDOFF.md`,
+built at the walking skeleton session on 11/23 (Mon). One piece per person:
+ 
+| # | Piece | Receives | Returns | Owner |
+|---|---|---|---|---|
+| 1 | CLI + input selection | file/dir paths from the user | list of file paths and their contents | 方騏為 (Cactex) |
+| 2 | Mock / fixture detector | file contents | list of `{file, line, snippet, kind}` | 鄧皓澤 (DanielTeng0811) |
+| 3 | LLM assumption drafter | detector output (+ optional spec) | list of `{assumption, file, line, category, verify_step}` | 鐘邦郡 (bonginn)  |
+| 4 | HANDOFF.md writer | drafter output | `HANDOFF.md` with status `uncertain` on every item | 吳弘叡 (x85432) |
+ 
+"It runs" means: on our sample project, one command produces a `HANDOFF.md` with at least
+one item. Pieces 2 and 3 may be faked in the agreed format at first.
+ 
+**Why:** `main` has no executable code yet. Building the thinnest connected path first shows
+early whether the pieces fit, and gives every member a first code PR.
+ 
+**Alternative rejected:** Each member builds one module fully before we integrate. Rejected
+because we would only find mismatched interfaces at the end.
+ 
+**Led by:** all team members.
+ 
+## 2026-11-23 — Evaluation sample size: 4 participants (supersedes DRAFT_PLAN.md)
+ 
+**What:** We keep the CP1 design: 4 external participants, 2 with code + README and 2 with
+code + README + author-reviewed `HANDOFF.md`. `DRAFT_PLAN.md`'s "at least 6" is an earlier draft.
+ 
+**Why:** Agreed in CP1 as realistic to recruit before the final report. Results with 4
+people are reported as preliminary.
+ 
+**Alternative rejected:** 6 participants (3 + 3), from the Phase 1 draft.
+ 
+**Led by:** all team members.
+ 
