@@ -11,6 +11,8 @@ conventions, and runtime behaviour such as batching, ordering, pagination and ra
 These assumptions are rarely written down. The engineer who runs the real environment,
 often on another team, does not know which ones the code depends on, so mismatches show up
 after deployment, one failure at a time.
+
+![How unwritten assumptions in mocks break after deployment](docs/images/problem.gif)
  
 Evidence so far (details in our CP1 report): one interviewee simulated a real-time stream
 one record at a time; in the cloud, data arrived in batches of up to two hours. Fixing it
@@ -33,6 +35,9 @@ A Python-focused CLI that scans a project **before integration** and drafts a
    environment and records evidence or a question.
 3. The author resolves the open items. Rescanning flags changed entries for rechecking.
 4. The handoff is done when every item is `verified`.
+
+![How a reviewed HANDOFF.md closes the gap before deployment](docs/images/solution.gif)
+
 ### Planned pipeline (first end-to-end version)
  
 ```
