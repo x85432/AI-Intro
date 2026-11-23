@@ -1,20 +1,28 @@
+from collections import deque
 from datetime import datetime
+
+FLAT_THRESHOLD = 0.5
+WINDOW = 5
 
 
 class TrendTracker:
     def __init__(self):
-        self.last = None
+        self.window = deque(maxlen=WINDOW)
+        self.last_ts = None
+        self.last_avg = None
 
     def update(self, record):
         ts = datetime.strptime(record['ts'], '%Y-%m-%d %H:%M:%S')
-        value = record['value']
-        if self.last is None:
-            self.last = (ts, value)
+        self.window.append(record['value'])
+        avg = sum(self.window) / len(self.window)
+        if self.last_ts is None:
+            self.last_ts, self.last_avg = ts, avg
             return 'flat'
-        diff = value - self.last[1]
-        self.last = (ts, value)
-        if diff > 0.5:
+        minutes = (ts - self.last_ts).total_seconds() / 60
+        change = (avg - self.last_avg) / minutes
+        self.last_ts, self.last_avg = ts, avg
+        if change > FLAT_THRESHOLD:
             return 'rising'
-        if diff < -0.5:
+        if change < -FLAT_THRESHOLD:
             return 'falling'
         return 'flat'
