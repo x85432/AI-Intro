@@ -275,6 +275,8 @@ def _call_model(prompt: str) -> _Output:
         response_schema=_Output,
         max_output_tokens=MAX_TOKENS,
         temperature=0,
+        # we pass no tools, so turn automatic function calling off (also silences its warning)
+        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
     )
     try:
         response = client.models.generate_content(model=model, contents=prompt, config=config)
