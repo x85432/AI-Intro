@@ -1,0 +1,20 @@
+[
+  {"id": "G-1", "category": "timing_batching", "file": "examples/stream_demo/trend.py", "line": 14,
+   "assumption": "update(record) 一次只處理一筆資料",
+   "real_env": "斷線恢復後一次補送 2 小時的資料"},
+  {"id": "G-2", "category": "null", "file": "examples/stream_demo/trend.py", "line": 16,
+   "assumption": "record['value'] 一定有值，直接放進視窗計算",
+   "real_env": "感測器讀不到時 value 為 null"},
+  {"id": "G-3", "category": "format", "file": "examples/stream_demo/trend.py", "line": 15,
+   "assumption": "ts 是 'YYYY-MM-DD HH:MM:SS' 的本地時間",
+   "real_env": "ISO 8601 的 UTC 時間，結尾有 Z"},
+  {"id": "G-4", "category": "ordering", "file": "examples/stream_demo/trend.py", "line": 21,
+   "assumption": "新的一筆時間一定比上一筆晚，時間差為正",
+   "real_env": "補送的資料最新的在前，時間差會是負的"},
+  {"id": "G-5", "category": "units_sign", "file": "examples/stream_demo/trend.py", "line": 4,
+   "assumption": "數值單位是 °C，變化小於 0.5 算持平",
+   "real_env": "送來的是 0.1°C 為單位的整數（215 代表 21.5°C）"},
+  {"id": "G-6", "category": "volume", "file": "examples/stream_demo/trend.py", "line": 5,
+   "assumption": "每筆剛好相隔 60 秒，最近 5 筆就是最近 5 分鐘",
+   "real_env": "間隔不固定，斷線時會有空檔"}
+]
