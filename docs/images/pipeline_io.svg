@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="872" viewBox="0 0 960 872" font-family="PingFang TC, Noto Sans TC, Microsoft JhengHei, Helvetica Neue, Arial, sans-serif">
+  <title>每個人的輸入與輸出（handoff pipeline）</title>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect width="960" height="872" fill="#FFFFFF"/>
+
+  <!-- Start -->
+  <rect x="200" y="20" width="420" height="50" rx="10" fill="#F1EFE8" stroke="#B4B2A9"/>
+  <text x="410" y="37" font-size="13" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">使用者在終端機輸入</text>
+  <text x="410" y="57" font-size="12" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central" font-family="Menlo, Consolas, monospace">python -m handoff scan examples/stream_demo</text>
+  <line x1="410" y1="70" x2="410" y2="97" stroke="#888780" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="420" y="85" font-size="12" fill="#5F5E5A" dominant-baseline="central">路徑 list[str]</text>
+
+  <!-- 1 Cactex -->
+  <rect x="200" y="100" width="420" height="100" rx="10" fill="#E6F1FB" stroke="#185FA5"/>
+  <text x="216" y="122" font-size="15" font-weight="600" fill="#0C447C" dominant-baseline="central">① 方騏為 Cactex · 入口（指令＋讀檔＋過濾）</text>
+  <text x="216" y="144" font-size="12" fill="#0C447C" dominant-baseline="central" font-family="Menlo, Consolas, monospace">inputs.collect(paths) → filters.split_sensitive(files)</text>
+  <text x="216" y="166" font-size="13" fill="#2C2C2A" dominant-baseline="central">輸入：使用者給的路徑 list[str]</text>
+  <text x="216" y="186" font-size="13" fill="#2C2C2A" dominant-baseline="central">輸出：list[SourceFile]（被濾掉的檔名另外列出）</text>
+  <line x1="410" y1="200" x2="410" y2="227" stroke="#888780" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="420" y="215" font-size="12" fill="#5F5E5A" dominant-baseline="central">list[SourceFile]</text>
+
+  <!-- Full files also go straight to 3 -->
+  <path d="M200 150 L176 150 L176 420 L197 420" fill="none" stroke="#888780" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="168" y="276" font-size="12" fill="#5F5E5A" text-anchor="end" dominant-baseline="central">完整檔案</text>
+  <text x="168" y="294" font-size="12" fill="#5F5E5A" text-anchor="end" dominant-baseline="central">也直接給 ③</text>
+
+  <!-- 2 Daniel -->
+  <rect x="200" y="230" width="420" height="100" rx="10" fill="#E1F5EE" stroke="#0F6E56"/>
+  <text x="216" y="252" font-size="15" font-weight="600" fill="#085041" dominant-baseline="central">② 鄧皓澤 Daniel · 找資料邊界（不用 AI）</text>
+  <text x="216" y="274" font-size="12" fill="#085041" dominant-baseline="central" font-family="Menlo, Consolas, monospace">detector.detect(files)</text>
+  <text x="216" y="296" font-size="13" fill="#2C2C2A" dominant-baseline="central">輸入：list[SourceFile]</text>
+  <text x="216" y="316" font-size="13" fill="#2C2C2A" dominant-baseline="central">輸出：list[MockHit]（file、line、snippet、kind）</text>
+  <line x1="410" y1="330" x2="410" y2="357" stroke="#888780" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="420" y="345" font-size="12" fill="#5F5E5A" dominant-baseline="central">list[MockHit]（只是提示）</text>
+
+  <!-- 3 bonginn -->
+  <rect x="200" y="360" width="420" height="120" rx="10" fill="#EEEDFE" stroke="#534AB7"/>
+  <text x="216" y="382" font-size="15" font-weight="600" fill="#3C3489" dominant-baseline="central">③ 鐘邦郡 bonginn · LLM 列假設</text>
+  <text x="216" y="404" font-size="12" fill="#3C3489" dominant-baseline="central" font-family="Menlo, Consolas, monospace">drafter.draft(files, hits, spec, fake)</text>
+  <text x="216" y="426" font-size="13" fill="#2C2C2A" dominant-baseline="central">輸入：完整檔案＋偵測結果＋規格（可省略）</text>
+  <text x="216" y="446" font-size="13" fill="#2C2C2A" dominant-baseline="central">輸出：DraftResult</text>
+  <text x="216" y="466" font-size="13" fill="#2C2C2A" dominant-baseline="central">　　＝清單項目 list[Assumption]＋涵蓋表 list[CoverageCell]</text>
+  <line x1="410" y1="480" x2="410" y2="507" stroke="#888780" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="420" y="495" font-size="12" fill="#5F5E5A" dominant-baseline="central">DraftResult</text>
+
+  <!-- 4 x85432 -->
+  <rect x="200" y="510" width="420" height="100" rx="10" fill="#FAEEDA" stroke="#854F0B"/>
+  <text x="216" y="532" font-size="15" font-weight="600" fill="#633806" dominant-baseline="central">④ 吳弘叡 x85432 · 寫出 HANDOFF.md</text>
+  <text x="216" y="554" font-size="12" fill="#633806" dominant-baseline="central" font-family="Menlo, Consolas, monospace">writer.write(result, out_path, scope)</text>
+  <text x="216" y="576" font-size="13" fill="#2C2C2A" dominant-baseline="central">輸入：DraftResult</text>
+  <text x="216" y="596" font-size="13" fill="#2C2C2A" dominant-baseline="central">輸出：HANDOFF.md（警語、涵蓋表、每項一節、開放題）</text>
+  <line x1="410" y1="610" x2="410" y2="637" stroke="#888780" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="420" y="625" font-size="12" fill="#5F5E5A" dominant-baseline="central">HANDOFF.md（作者審稿後放進 PR）</text>
+
+  <!-- 4b mark -->
+  <rect x="200" y="640" width="420" height="100" rx="10" fill="#FAEEDA" stroke="#854F0B" stroke-dasharray="5 3"/>
+  <text x="216" y="662" font-size="15" font-weight="600" fill="#633806" dominant-baseline="central">④b 接收者用 mark 記錄結果 · x85432 實作</text>
+  <text x="216" y="684" font-size="12" fill="#633806" dominant-baseline="central" font-family="Menlo, Consolas, monospace">python -m handoff mark A-01 mismatch --evidence "..."</text>
+  <text x="216" y="706" font-size="13" fill="#2C2C2A" dominant-baseline="central">輸入：HANDOFF.md＋驗證結果與證據（由人填）</text>
+  <text x="216" y="726" font-size="13" fill="#2C2C2A" dominant-baseline="central">輸出：更新後的 HANDOFF.md（status、evidence）</text>
+  <line x1="410" y1="740" x2="410" y2="767" stroke="#888780" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="420" y="755" font-size="12" fill="#5F5E5A" dominant-baseline="central">全部 verified</text>
+
+  <!-- End -->
+  <rect x="200" y="770" width="420" height="44" rx="10" fill="#F1EFE8" stroke="#B4B2A9"/>
+  <text x="410" y="792" font-size="13" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central">部署（之後改程式 → rescan，Phase 3）</text>
+
+  <!-- Evaluation branch -->
+  <rect x="660" y="230" width="280" height="72" rx="10" fill="#E1F5EE" stroke="#0F6E56"/>
+  <text x="676" y="250" font-size="14" font-weight="600" fill="#085041" dominant-baseline="central">鄧皓澤 Daniel · 標準答案</text>
+  <text x="676" y="271" font-size="12" fill="#085041" dominant-baseline="central" font-family="Menlo, Consolas, monospace">examples/*/expected.json</text>
+  <text x="676" y="290" font-size="12" fill="#2C2C2A" dominant-baseline="central">3 個範例專案，1 個保留到最後才測</text>
+  <line x1="800" y1="302" x2="800" y2="357" stroke="#888780" stroke-width="1.3" marker-end="url(#a)"/>
+
+  <rect x="660" y="360" width="280" height="120" rx="10" fill="#EEEDFE" stroke="#534AB7"/>
+  <text x="676" y="382" font-size="14" font-weight="600" fill="#3C3489" dominant-baseline="central">鐘邦郡 bonginn · 偵測能力評估</text>
+  <text x="676" y="404" font-size="12" fill="#3C3489" dominant-baseline="central" font-family="Menlo, Consolas, monospace">scripts/run_prompt_eval.py</text>
+  <text x="676" y="426" font-size="13" fill="#2C2C2A" dominant-baseline="central">輸入：DraftResult＋expected.json</text>
+  <text x="676" y="446" font-size="13" fill="#2C2C2A" dominant-baseline="central">輸出：docs/eval/results_日期.md</text>
+  <text x="676" y="466" font-size="12" fill="#5F5E5A" dominant-baseline="central">抓到幾個／雜訊幾個／行號對不對</text>
+  <line x1="622" y1="420" x2="657" y2="420" stroke="#888780" stroke-width="1.3" marker-end="url(#a)"/>
+
+  <!-- Legend -->
+  <rect x="200" y="836" width="14" height="14" rx="3" fill="#E6F1FB" stroke="#185FA5"/>
+  <text x="220" y="843" font-size="12" fill="#2C2C2A" dominant-baseline="central">方騏為 Cactex</text>
+  <rect x="330" y="836" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56"/>
+  <text x="350" y="843" font-size="12" fill="#2C2C2A" dominant-baseline="central">鄧皓澤 Daniel</text>
+  <rect x="460" y="836" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7"/>
+  <text x="480" y="843" font-size="12" fill="#2C2C2A" dominant-baseline="central">鐘邦郡 bonginn</text>
+  <rect x="595" y="836" width="14" height="14" rx="3" fill="#FAEEDA" stroke="#854F0B"/>
+  <text x="615" y="843" font-size="12" fill="#2C2C2A" dominant-baseline="central">吳弘叡 x85432</text>
+  <rect x="725" y="836" width="14" height="14" rx="3" fill="#F1EFE8" stroke="#B4B2A9"/>
+  <text x="745" y="843" font-size="12" fill="#2C2C2A" dominant-baseline="central">使用者／其他</text>
+</svg>
