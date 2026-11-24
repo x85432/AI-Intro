@@ -50,4 +50,20 @@ people are reported as preliminary.
 **Alternative rejected:** 6 participants (3 + 3), from the Phase 1 draft.
  
 **Led by:** all team members.
+
+## 2026-11-23 — LLM for the drafter: Gemini instead of Claude
+
+**What:** The drafter (③) calls the Gemini API through the `google-genai` SDK. Default model
+`gemini-3.6-flash`, overridable with `HANDOFF_MODEL`. The key is read from `GEMINI_API_KEY`
+in the environment and never stored in the repo. Output is constrained with Gemini's
+structured output (JSON schema), then checked against the input files.
+
+**Why:** Gemini is free and unlimited for our team.
+
+**Alternative rejected:** Claude API with `claude-opus-5-5` and `messages.parse`, as first
+planned in docs/CP2_PLAN.md §4 #6.
+
+**Led by:** 鐘邦郡 (bonginn)
+
+**Follow-up:** `handoff/README.md` and `docs/CP2_PLAN.md` still mention Claude / `ANTHROPIC_API_KEY`.
  
