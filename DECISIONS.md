@@ -68,9 +68,9 @@ side JSON file. Layout, top to bottom:
    fixed question format in Chinese (`**我的假設**`, `**問題**`, `**請給例子**`, `**影響**`);
    the machine fields below them use the field names from `models.py`
    (`- **status**: uncertain`).
-4. The open question: 「你們的環境還有什麼常讓人踩雷、但我沒問到的？」
-5. `## 附錄`: status definitions, category definitions, the evidence rules and a blank
-   template for adding an item by hand.
+4. `## 附錄`: status definitions, category definitions, the evidence rules and one line on
+   adding an item by hand. The blank template for that is in `handoff/README.md`, not in every
+   `HANDOFF.md`: it is rarely needed, and copying an existing item works just as well.
 
 Rules:
 - One field per line. `write` and `mark` replace line breaks with spaces. Long samples go in a
@@ -96,7 +96,10 @@ item quickly. Separate prefixes stop the author and the receiver from both writi
 **Alternative rejected:** Markdown plus a hidden JSON block, or a side `handoff.json` (two
 copies drift apart). One big table, or a plain list (plan §4, decision 4). A lenient parser
 that fills in defaults. Multi-line values. A coverage list with one row per checked cell (it
-hides the gaps). Continuing the AI numbering for hand-added items.
+hides the gaps). Continuing the AI numbering for hand-added items. Ending the file with the open
+question from plan §1.3 (「你們的環境還有什麼常讓人踩雷、但我沒問到的？」): nobody is likely
+to answer a question with no specific subject, and a receiving engineer who knows of another
+pitfall can add it as an `H-` item.
 
 **Led by:** 吳弘叡 (x85432).
 
