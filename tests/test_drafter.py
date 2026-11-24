@@ -78,10 +78,48 @@ def test_items_pointing_nowhere_are_dropped(bad):
 
 def test_duplicate_keys_and_cells_are_dropped():
     out = _Output(items=[item("k1"), item("k1", line=9)],
-                  coverage=[_Cell(boundary="b:1", category="null", result="none_found")] * 2)
+                  coverage=[_Cell(boundary=f"{TREND}:8", category="null", result="none_found")] * 2)
     result = drafter.to_result(out, FAKE_FILES)
     assert len(result.items) == 1
     assert len(result.coverage) == 1
+
+
+def test_missing_boundary_is_reported(caplog):
+    out = _Output(items=[], coverage=[])
+    result = drafter.to_result(out, FAKE_FILES, FAKE_HITS)
+    assert result.coverage == []
+    for boundary in drafter.boundaries_from_hits(FAKE_HITS):
+        assert f"coverage for {boundary} has no answer for:" in caplog.text
+    for category in CATEGORIES:
+        assert category in caplog.text
+
+
+@pytest.mark.parametrize("boundary", [
+    "not_exist.py:1", f"{TREND}:999", f"{TREND}:0", f"{TREND}:abc", TREND,
+])
+def test_invalid_coverage_boundary_is_dropped(boundary, caplog):
+    out = _Output(items=[], coverage=[
+        _Cell(boundary=boundary, category="null", result="none_found")])
+    result = drafter.to_result(out, FAKE_FILES)
+    assert result.coverage == []
+    assert "invalid boundary" in caplog.text
+
+
+@pytest.mark.parametrize("status", ["found", "missing_handling"])
+def test_coverage_category_must_match_item(status, caplog):
+    out = _Output(items=[item(category="null")], coverage=[
+        _Cell(boundary=f"{TREND}:8", category="errors", result=status, item_key="k1")])
+    result = drafter.to_result(out, FAKE_FILES)
+    assert len(result.items) == 1
+    assert result.coverage == []
+    assert "category differs" in caplog.text
+
+
+def test_draft_reports_omitted_detector_boundaries(monkeypatch, caplog):
+    monkeypatch.setattr(drafter, "_call_model", lambda prompt: _Output(items=[], coverage=[]))
+    drafter.draft(FAKE_FILES, FAKE_HITS)
+    for boundary in drafter.boundaries_from_hits(FAKE_HITS):
+        assert f"coverage for {boundary} has no answer for:" in caplog.text
 
 
 # ------------------------------------------------------------------- failures

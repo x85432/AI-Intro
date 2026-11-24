@@ -168,17 +168,28 @@ class _Output(BaseModel):
     coverage: list[_Cell]
 
 
-def to_result(output: _Output, files: list[SourceFile]) -> DraftResult:
+def to_result(output: _Output, files: list[SourceFile],
+              hits: Optional[list[MockHit]] = None) -> DraftResult:
     """Check the model's output against the input files and number the items A-01, A-02...
 
     Dropped (and logged): items whose file is not an input file or whose line does not
     exist, items with a duplicate key, and coverage cells that point at a dropped or
-    unknown item. Missing cells are logged, not invented.
+    unknown item. Invalid coverage boundaries and category mismatches are also dropped.
+    Missing cells, including entirely omitted detected boundaries, are logged, not invented.
     """
     line_counts = {f.path: len(f.text.splitlines()) for f in files}
 
+    def valid_boundary(boundary: str) -> bool:
+        try:
+            path, line_text = boundary.rsplit(":", 1)
+            line = int(line_text)
+        except ValueError:
+            return False
+        return path in line_counts and 1 <= line <= line_counts[path]
+
     items: list[Assumption] = []
     key_to_id: dict[str, str] = {}
+    key_to_category: dict[str, str] = {}
     for it in output.items:
         if it.file not in line_counts:
             log.warning("dropped item %s: file %r was not in the input", it.key, it.file)
@@ -191,6 +202,7 @@ def to_result(output: _Output, files: list[SourceFile]) -> DraftResult:
             continue
         item_id = f"A-{len(items) + 1:02d}"
         key_to_id[it.key] = item_id
+        key_to_category[it.key] = it.category
         items.append(Assumption(
             id=item_id, assumption=it.assumption, file=it.file, line=it.line,
             category=it.category, question=it.question, impact=it.impact,
@@ -201,11 +213,19 @@ def to_result(output: _Output, files: list[SourceFile]) -> DraftResult:
     coverage: list[CoverageCell] = []
     seen_cells: set[tuple[str, str]] = set()
     for c in output.coverage:
+        if not valid_boundary(c.boundary):
+            log.warning("dropped coverage cell %s/%s: invalid boundary",
+                        c.boundary, c.category)
+            continue
         if (c.boundary, c.category) in seen_cells:
             continue
         if c.result == "none_found":
             item_id = None
         elif c.item_key in key_to_id:
+            if key_to_category[c.item_key] != c.category:
+                log.warning("dropped coverage cell %s/%s: category differs from item %s",
+                            c.boundary, c.category, c.item_key)
+                continue
             item_id = key_to_id[c.item_key]
         else:
             log.warning("dropped coverage cell %s/%s: item %r was dropped or unknown",
@@ -215,7 +235,11 @@ def to_result(output: _Output, files: list[SourceFile]) -> DraftResult:
         coverage.append(CoverageCell(boundary=c.boundary, category=c.category,
                                      result=c.result, item_id=item_id))
 
-    for b in {c.boundary for c in coverage}:
+    expected_boundaries = {
+        b for b in boundaries_from_hits(hits or []) if valid_boundary(b)
+    }
+    expected_boundaries.update(c.boundary for c in coverage)
+    for b in sorted(expected_boundaries):
         missing = [cat for cat in CATEGORIES if (b, cat) not in seen_cells]
         if missing:
             log.warning("coverage for %s has no answer for: %s", b, ", ".join(missing))
@@ -298,8 +322,9 @@ def draft(files: list[SourceFile], hits: list[MockHit],
 
     Input:  the full kept files (with line numbers added in the prompt), the hints
             from ②, and an optional spec text.
-    Output: DraftResult(items, coverage). Every boundary x category cell is answered,
-            "none_found" included. Items whose file or line does not exist are dropped.
+    Output: DraftResult(items, coverage). Missing boundary x category answers are logged,
+            not filled with "none_found". Invalid references and category mismatches
+            are dropped and logged.
     fake=True returns fixed data without calling the API
     (handoff.fakes.FAKE_RESULT is available for this).
     On a missing API key, a network error or a refusal, raise a clear error and let
@@ -314,4 +339,4 @@ def draft(files: list[SourceFile], hits: list[MockHit],
     if len(prompt) > MAX_PROMPT_CHARS:
         raise DrafterError(f"input is too large ({len(prompt):,} characters, limit "
                            f"{MAX_PROMPT_CHARS:,}); scan fewer files")
-    return to_result(_call_model(prompt), files)
+    return to_result(_call_model(prompt), files, hits)
