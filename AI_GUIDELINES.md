@@ -8,9 +8,9 @@
 
 3. **Without a spec**, after brainstorming we use Claude Code with `Opus` in plan mode to turn the chosen idea into a plan, not to make the final architecture decision. That is a team discussion, recorded in `DECISIONS.md`.
 
-4. **For implementation**, we use Claude Code with `Sonnet` to build the approved plan on a feature branch, not to push to `main`, and not for authentication, payment, or personal-data logic, which a human writes. No AI-generated code is merged unless someone other than its author can explain it.
+4. **For implementation**, we use Claude Code with `Sonnet` to build the approved plan on a feature branch, not to push to `main`, and not for authentication, payment, or personal-data logic, which a human writes. A PR is merged only after an approval from someone other than its author that comments on at least one specific file or line of the diff: a question, a concern, or an explanation in the reviewer's own words. An approval with no comment does not count.
 
-5. **For testing**, we use Claude `Sonnet` to generate test skeletons, not to declare the work done. A human adds edge cases and confirms coverage.
+5. **For testing**, we use Claude `Sonnet` to generate test skeletons, not to declare the work done. If the AI wrote the tests, the PR's "What I changed afterwards" names at least one test case a human added or changed, and why. If it says "None", the steward requests changes.
 
 6. **For quick questions**, we use Claude `Haiku` for syntax lookups, error messages, and first-draft docstrings, not for code that gets merged without review.
 
@@ -30,7 +30,7 @@
 
 4. **`DECISIONS.md`:** If an AI suggestion changes our approach or influences a technical decision, the final decision and the reason go in `DECISIONS.md`, written by a human.
 
-5. **PR description:** Every PR states in one sentence whether AI was involved, and links to the related log entry. The description itself is written by a human (see Section 1).
+5. **PR description:** Every PR fills in the template's "AI assistance" section (tool and model, what it generated, what we changed afterwards) and links its prompt-log entry. "No AI used" is allowed; an empty section or leftover placeholder text is not, and the steward does not approve until it is filled in. The description itself is written by a human (see Section 1).
 
 ---
 
@@ -45,3 +45,9 @@
 4. **Style vs. correctness**: If the disagreement is about style or preference rather than correctness, we defer to our style guide and linter config instead of debating case by case.
 
 5. **Tie-breaking**: A vote is not evidence, and "it looks fine" is not evidence. If the criteria above don't settle it, the code steward's call is final and gets one sentence in DECISIONS.md explaining why, written by a human.
+
+---
+
+# Revision history
+
+- **2026-11-25 (Week 12 lab):** rewrote Section 1 #4, Section 1 #5 and Section 2 #5 so a teammate can check each one from a PR. Evidence: the approvals on #9–#13 had no comment, and #13 was merged two minutes after it was opened; #12 and #15 say "What I changed afterwards: None"; #9–#11 say nothing about AI use, and only #14 links a prompt-log entry; Group 11's review found unfilled placeholder text in #13 (issue #19).
