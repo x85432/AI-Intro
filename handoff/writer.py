@@ -10,6 +10,7 @@ from __future__ import annotations
 import difflib
 import os
 import re
+import sys
 import tempfile
 from collections import Counter
 from typing import Optional
@@ -70,6 +71,14 @@ def write(result: DraftResult, out_path: str, scope: list[str]) -> None:
     _atomic_write(out_path, text)
 
 
+STATUS_LINE_PREFIX = "- 狀態："
+
+
+def _status_line(counts: Counter) -> str:
+    """'- 狀態：uncertain 3｜verified 0｜mismatch 0'. Used by write and by mark."""
+    return STATUS_LINE_PREFIX + "｜".join(f"{s} {counts[s]}" for s in STATUSES)
+
+
 def _one_line(value: object) -> str:
     """Every field stays on one line: line breaks become spaces."""
     return re.sub(r"\s*[\r\n]+\s*", " ", str(value)).strip()
@@ -84,7 +93,7 @@ def _render(result: DraftResult, scope: list[str]) -> str:
         "> 作者請審過一遍，刪掉不對的、補上漏掉的；接收者請逐項驗證。名詞定義和證據規範在文末附錄。",
         "",
         "- 掃描範圍：" + ("、".join(_one_line(s) for s in scope) or "（未提供）"),
-        "- 狀態：" + "｜".join(f"{s} {counts[s]}" for s in STATUSES),
+        _status_line(counts),
         "",
         "## 涵蓋表",
         "",
@@ -330,9 +339,125 @@ def _parse_item(heading_lineno: int, heading: str, body: list[tuple[int, str]],
 
 def mark(path: str, item_id: str, status: str, evidence: str,
          evidence_type: Optional[str] = None) -> None:
-    """Update one item's status and evidence, noting who changed it and when.
+    """Update one item's status and evidence in HANDOFF.md.
 
-    For humans only: the AI never marks an item verified (CP1 human-AI boundary).
-    Reject unknown ids and statuses outside models.STATUSES.
+    Four layers: check the arguments and find the item (1), apply the evidence
+    rules (2), ask a person to confirm before `verified` (4), then rewrite only
+    this item's two lines and the status counts (3).
+
+    CP2 version: `evidence_type` is kept at the front of the evidence text, and
+    who marked it and when are not recorded yet; both wait for the proposed
+    interface change (DECISIONS.md, 2026-11-24).
     """
-    raise NotImplementedError("④ writer.mark: to be implemented by x85432 in PR 2")
+    # Layer 1: check the arguments, then find the item. cli.py also limits
+    # `status`, but tests and the runner call mark directly, so check here too.
+    if status not in STATUSES:
+        raise ValueError(f"status 寫的是 {status!r}，只能是：{', '.join(STATUSES)}")
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+    items = _parse_text(text, path)  # a malformed file stops here, before anything changes
+    ids = [item.id for item in items]
+    if item_id not in ids:
+        existing = "、".join(ids) or "（沒有任何項目）"
+        raise ValueError(f"{path} 裡找不到 {item_id}，現有的是：{existing}")
+
+    # Layer 2: the evidence rules; `evidence` becomes the text that is written.
+    evidence = _evidence_text(status, evidence, evidence_type)
+
+    # Layer 4: only a person marks an item verified (CP1 human-AI boundary).
+    # Runs before layer 3, so a "no" leaves the file untouched.
+    if status == "verified":
+        item = next(item for item in items if item.id == item_id)
+        _confirm_verified(item, evidence)
+
+    # Layer 3: change only this item's status and evidence lines and the status
+    # counts at the top. The coverage table, hand-added items and any other
+    # edits stay exactly as they were. Same safety as write: check, then swap in.
+    new_text = _replace_fields(text, item_id, {"status": status, "evidence": evidence})
+    counts = Counter(status if item.id == item_id else item.status for item in items)
+    new_text = _replace_status_line(new_text, counts)
+    _parse_text(new_text, f"{path}（未寫出）")
+    _atomic_write(path, new_text)
+
+
+def _interactive() -> bool:
+    """True when a person is typing in a terminal.
+
+    AI agents usually run commands without one, so this is the check that
+    actually stops them; piping "y" in (`echo y | ...`) does not count either.
+    """
+    return sys.stdin.isatty()
+
+
+def _confirm_verified(item: Assumption, evidence: str) -> None:
+    """Show the item and the evidence, then ask [y/N]. Raise unless the answer is yes."""
+    if not _interactive():
+        raise ValueError(f"標成 verified 要由人在終端機按 y 確認，這次不是在互動式終端機執行，"
+                         f"所以沒有改動 {item.id}。可以先標 mismatch，或保留 uncertain 並附上證據。")
+    print(f"{item.id} · {item.category} · {item.file}:{item.line}")
+    print(f"問題：{item.question}")
+    print(f"證據：{evidence}")
+    try:
+        answer = input("標成 verified 代表你在真實環境確認過，假設成立。確定嗎？[y/N] ")
+    except EOFError:
+        answer = ""
+    if answer.strip().lower() not in ("y", "yes"):
+        raise ValueError(f"已取消，{item.id} 沒有改動。")
+
+
+def _replace_fields(text: str, item_id: str, values: dict[str, str]) -> str:
+    """Replace machine fields (`- **status**: ...`) inside one item's section.
+
+    Only called on text that `parse` accepted, so the item and its fields exist.
+    """
+    lines = text.split("\n")
+    start = lines.index(ITEMS_HEADING)
+    heading = next(i for i in range(start + 1, len(lines))
+                   if (m := HEADING_RE.match(lines[i])) and m["id"] == item_id)
+    end = next((i for i in range(heading + 1, len(lines))
+                if lines[i].startswith(("### ", "## "))), len(lines))
+    for i in range(heading + 1, end):
+        m = META_RE.match(lines[i])
+        if m and m["label"] in values:
+            lines[i] = f"- **{m['label']}**: {values[m['label']]}".rstrip()
+    return "\n".join(lines)
+
+
+def _replace_status_line(text: str, counts: Counter) -> str:
+    """Update "- 狀態：..." above "## 項目". If someone deleted it, leave it out."""
+    lines = text.split("\n")
+    for i in range(lines.index(ITEMS_HEADING)):
+        if lines[i].startswith(STATUS_LINE_PREFIX):
+            lines[i] = _status_line(counts)
+            break
+    return "\n".join(lines)
+
+
+# Evidence that says nothing (DECISIONS.md, 2026-11-24, "What `mark` records").
+# Compared after removing spaces and punctuation, so "OK!" and "沒問題。" match too.
+EMPTY_EVIDENCE = {"ok", "okay", "lgtm", "looksgood", "fine", "checked", "done",
+                  "沒問題", "確認過", "已確認", "沒事", "正常", "可以"}
+
+
+def _evidence_text(status: str, evidence: Optional[str],
+                   evidence_type: Optional[str]) -> str:
+    """Check the evidence and return the one line `mark` writes.
+
+    `verified` and `mismatch` need `evidence_type` and real evidence. Until the
+    interface change adds an `evidence_type` field, the type is kept at the
+    front of the text: "[inspect_sample] 撈 11/25 資料，一次 120 筆".
+    """
+    text = _one_line(evidence or "")
+    if evidence_type is not None and evidence_type not in VERIFY_TYPES:
+        raise ValueError(f"--type 寫的是 {evidence_type!r}，只能是：{', '.join(VERIFY_TYPES)}")
+    if status in ("verified", "mismatch"):
+        if evidence_type is None:
+            raise ValueError(f"標成 {status} 要附 --type，只能是：{', '.join(VERIFY_TYPES)}")
+        if not text:
+            raise ValueError(f"標成 {status} 要附證據：寫來源和具體結果（數字、格式或例子）")
+        if re.sub(r"[\W_]+", "", text).lower() in EMPTY_EVIDENCE:
+            raise ValueError(f"「{text}」不算證據：要寫來源和具體結果（數字、格式或例子），"
+                             "規範在 HANDOFF.md 的附錄")
+    if evidence_type is not None and text:
+        text = f"[{evidence_type}] {text}"
+    return text
