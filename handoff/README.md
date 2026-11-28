@@ -84,8 +84,31 @@ Not "ask the LLM to list what it notices": that is what failed in Interview 2. I
 The coverage table in `HANDOFF.md` shows which cells were checked, so the author can see the
 gaps instead of trusting the list. Every question follows one format: *my assumption (file:line)
 → is the real environment like this? if not, what exactly? → please send an example → impact*.
-The file ends with an open question: "What else in your environment trips people up that I did
-not ask about?"
+There is no open question at the end: a receiving engineer who knows of another pitfall adds it
+as an `H-` item (DECISIONS.md, 2026-11-24, "HANDOFF.md format").
+
+### Adding an item to HANDOFF.md by hand
+
+Paste this at the end of `## 項目`, number it `H-01`, `H-02`, ... and keep every field on one
+line. `python -m handoff mark` (or the next `parse`) reports any line it cannot read.
+
+```markdown
+### H-01 · <category> · <file>:<line>
+
+**我的假設**：
+
+**問題**：
+
+**請給例子**：
+
+**影響**：
+
+- **verify_type**: ask_owner
+- **verify_step**:
+- **status**: uncertain
+- **evidence**:
+- **added_by**: human
+```
 
 ## Human-AI boundary
 
